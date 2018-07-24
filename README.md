@@ -152,7 +152,7 @@ I'm not going to copy the entirety of this file into here. You can look at it yo
 
 At the top we include the ModularFungi.hpp, this in turn includes rack.hpp and everything else that comes from that.
 
-Then we declare a new type of structure which we have decided to call `Bitmap` and it's a structure based on a structure that Andrew provided called 'TransparentWidget'. In this case Transparent means that it doesn't listen to mouse events, they just pass straight through it so that the underlying ModuleWidget can be dragged around. A knob would be an example of an OpaqueWidget because it does listen to the mouse events, allowing the knob to respond to being dragged, and at the same time not passing those messages through so that the module doesn't move at the same time.
+Then we declare a new type of structure which we have decided to call `Bitmap` and it's a structure based on a structure that Andrew provided called `TransparentWidget`. In this case Transparent means that it doesn't listen to mouse events, they just pass straight through it so that the underlying ModuleWidget can be dragged around. A knob would be an example of an OpaqueWidget because it does listen to the mouse events, allowing the knob to respond to being dragged, and at the same time not passing those messages through so that the module doesn't move at the same time.
 
 We declare some information that this structure will hold:
 - The path to the png file
