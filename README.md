@@ -55,3 +55,69 @@ The VERSION is how the plugin manager knows when to update. The plugin manager i
 (because that VERSION information was baked into it during the build). The plugin manager on the server knows the current version of each plugin
 that it hosts. The two of the compare notes, and the server can then send your computer any plugins where the two version numbers are
 not the same.
+
+Further down the Makefile we find this:
+```
+# Include the VCV Rack plugin Makefile framework
+include $(RACK_DIR)/plugin.mk
+```
+
+This is another example of including shared information. The Makefile inside each plugin project is generally tiny. All the hardwork is
+done in other makefiles that Andrew has written and which contain the recipes and rules to make plugins in general. Here the instruction
+is to incorporate the contents of the plugin.mk file from the main Rack directory (this file is probably not in the downloaded version of Rack).
+
+### Resources
+
+There is a directory in the project called res, this includes the resources that the plugin will require. In our project it simply
+contains 6 svg files and 6 png files. The res directory will be included in the finished zip file so that the graphics become part of 
+what the plugin manager publishes.
+
+### Source files
+
+The src directory contains our source code files, this directory is not included in the zip file, because it is not necessary to have
+the source code for someone to run the plugin, generally all they need is the plugin.dll and the resources.
+
+### ModularFungi.cpp
+
+Take a look at the ModularFungi.cpp file in the src directory, we'll break it down bit by bit:
+```
+#include "ModularFungi.hpp"
+```
+This is the instruction to include a header file. We'll look at what's in there later. The compiler will stop reading the .cpp file at this point, and read all of the .hpp file, including any further files that the .hpp file asks to include; only then will it move on to the next line in the .cpp file.
+```
+Plugin *plugin;
+```
+This is where we get into some programming, don't worry too much about this yet. This line is saything that we need a reference to a Plugin object (capital P) and we will call that reference plugin (small p). 
+```
+void init(rack::Plugin *p) {
+	plugin = p;
+	p->slug = TOSTRING(SLUG);
+	p->version = TOSTRING(VERSION);
+
+	// Add all Models defined throughout the plugin
+	p->addModel(modelBlank_3HP);
+	p->addModel(modelBlank_6HP);
+	p->addModel(modelBlank_10HP);
+	p->addModel(modelBlank_16HP);
+	p->addModel(modelBlank_20HP);
+	p->addModel(modelBlank_32HP);
+
+	// Any other plugin initialization may go here.
+	// As an alternative, consider lazy-loading assets and lookup tables when your module is created to reduce startup times of Rack.
+}
+```
+Here we are declaring a function, a piece of code that carries out a particular action or operation. The function is called 'init' and it relies on a reference to a Plugin (capital P) and that reference is called p. If someone tries to use this function, they will have
+to give it a reference to a Plugin.
+
+From top to bottom the function then does the following:
+- Set our plugin reference (small p plugin from earlier) to refer to the same Plugin as p
+- set the slug of the plugin to the SLUG value in the Makefile
+- set the version of the plugin to the VERSION value in the Makefile
+- add 6 models to the list of models that the plugin has.
+
+This is how VCVRack manages all the plugins and modules. When VCVRack starts, it searches for subfolders in the plugins folder. In each one it expects to find a plugin.dll. It will load this and each plugin.dll should have an init function. VCVRack constructs a Plugin object and puts it in a list. It calls the init function, passing it a reference to the Plugin object, and the init function sets the
+internal name (SLUG) and version, and gives the Plugin a list of models.
+
+After all this VCVRack has a list of Plugins, each of which has a list of models, and this is everything VCVRack needs to be able to 
+offer the module browser, and to load existing patch files.
+
