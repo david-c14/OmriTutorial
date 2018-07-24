@@ -121,3 +121,59 @@ internal name (SLUG) and version, and gives the Plugin a list of models.
 After all this VCVRack has a list of Plugins, each of which has a list of models, and this is everything VCVRack needs to be able to 
 offer the module browser, and to load existing patch files.
 
+### ModularFungi.hpp
+```#include "rack.hpp"
+
+using namespace rack;
+
+// Forward-declare the Plugin, defined in Template.cpp
+extern Plugin *plugin;
+
+// Forward-declare each Model, defined in each module source file
+extern Model *modelBlank_3HP;
+extern Model *modelBlank_6HP;
+extern Model *modelBlank_10HP;
+extern Model *modelBlank_16HP;
+extern Model *modelBlank_20HP;
+extern Model *modelBlank_32HP;
+```
+At the top we include rack.hpp, this header file is provided by Andrew, and through this file the compiler has access to definitions of all the things in VCV. 
+
+Next is `using namespace rack;` which is there because many of the definitions of VCV are segregated into a collection of names called Rack. By declaring that we are using that namespace, we don't need to explicitly say which namespace we are referring to. instead of having to say we want a `rack::Plugin`, we can simply say `Plugin`. 
+
+Now there is a declaration of a reference to a Plugin, called plugin.  We've seen this before in the ModularFungi.cpp file, but this one is slightly different. It says that reference is external, using the `extern` keyword. There are lots of pieces of code which need to know about the reference, but once everything is linked together, there must be only one actual reference. The actual reference will come from the ModularFungi.cpp file, and every other declaration of it should be external, to indicate that there will be a reference 
+like this, but this is not it.
+
+Finally we declare references to our 6 models. Again these are external declarations, because we are going to declare the one true reference somewhere else.
+
+### Blanks.cpp
+
+I'm not going to copy the entirety of this file into here. You can look at it yourself.
+
+At the top we include the ModularFungi.hpp, this in turn includes rack.hpp and everything else that comes from that.
+
+Then we declare a new type of structure which we have decided to call `Bitmap` and it's a structure based on a structure that Andrew provided called 'TransparentWidget'. In this case Transparent means that it doesn't listen to mouse events, they just pass straight through it so that the underlying ModuleWidget can be dragged around. A knob would be an example of an OpaqueWidget because it does listen to the mouse events, allowing the knob to respond to being dragged, and at the same time not passing those messages through so that the module doesn't move at the same time.
+
+We declare some information that this structure will hold:
+- The path to the png file
+- A flag to say that we have tried to load the png file
+- A number which is used internally to refer to the png file after it's been loaded.
+
+Then we provide a function which can draw the png file when we ask it to. This function is passed a context from the graphics library, and everything it does happens in that context. Basically the function will try to load the png file once, and if it succeeds, it will
+centre this widget onto the module based on the size of the png image. It will store the internal reference number for the loaded png so that it can be used later. After that, if the function is called it will use the png image to create a fill texture, and it will draw 
+a rectangle on the screen filled with that texture. This is how we get the image displayed.
+
+A second function in the Bitmap structure is the `draw` function. This is a standard function in the TransparentWidget, and we are override it's behaviour. VCVrack will call this function when it thinks the widget needs to be drawn, and so in here we call our big `DrawImage` function, and then we let TransparentWidget do whatever it would normally do with a draw.
+
+Now we declare another structure, this is our ModuleWidget for the 3HP blank. Every module in rack has a Module and a ModuleWidget. The Module does the audio work, and the ModuleWidget does the visuals. Because our plugin does no audio work, we can get away with using a plain Module and not have to declare our own variation. But we do want to control the visuals, so we declare our own variety of ModuleWidget which we've called Blank_3HP. When one of these is created it sets the panel background to the svg file, and it creates a new
+Bitmap (as we declared above) and tells it which filename to load. Then it makes the Bitmap widget a child of itself, so that it will get drawn in the correct order. 
+
+We declare all 6 of our different ModuleWidgets in this way.
+
+Finally at the bottom of the file we declare our 6 models. These are the actual declarations of the models which will satisfy the external declarations that we saw in the header file, and these are also the actual models which we added to the list of models in the plugin in the ModularFungi.cpp file.
+
+For each of the models we create, we specify which Module and ModuleWidget it uses, What names to use in the module browser, and what tags to use to categorise the module.
+
+The end.
+
+
